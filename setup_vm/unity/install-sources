@@ -1,0 +1,42 @@
+#!/bin/sh
+# Allow ssh access to launchpad.
+# This should probably be provided by setup_vm. -- vila 2013-03-10
+ssh-keyscan bazaar.launchpad.net >>~/.ssh/known_hosts
+mkdir ~/src
+# Install ssoclient and dependencies from source.
+# python-requests is installed from deb.
+cd ~/src
+bzr branch lp:~ubuntuone-pqm-team/requests-oauthlib/stable requests-oauthlib
+bzr branch lp:~canonical-isd-hackers/canonical-identity-provider/ssoclient
+cd ~/src/requests-oauthlib
+python setup.py install --user
+cd ~/src/ssoclient
+python setup.py install --user
+# Install payclient from source.
+# python-piston-mini-client is installed from deb
+cd ~/src
+bzr branch lp:payclient
+cd ~/src/payclient
+python setup.py install --user
+# Install u1testutils from source.
+cd ~/src
+bzr branch lp:u1-test-utils
+cd ~/src/u1-test-utils
+python setup.py install --user
+# Get the in-dash payments test branch
+cd ~/src
+bzr branch lp:~canonical-isd-hackers/u1-test-utils/test-in-dash-payments
+cat <<EOF >~/src/test-in-dash-payments/tests/local.cfg
+[openid]
+openid_sso_server_url = {sso.url}
+
+[upay]
+pay_server_url = {pay.url}
+consumer_id = TEST
+pay_api_username = u1qauser
+pay_api_password = u1qapassword
+
+[ubuntuone]
+ubuntuone_server_url = {u1.url}
+    
+EOF
