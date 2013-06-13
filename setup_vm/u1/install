@@ -38,6 +38,11 @@ url_format: http://%(host)s:%(port)d/api/2.0
 
 [url]
 openid_sso_server: {sso.url}
+u1ms_search_base: {music_search.url}/v1/search
+
+[musicsearch]
+host: {music_search.address}
+port: {music_search.port}
 
 EOF
 # XXX The secrets file is overlayed, so we can't use the config file.
@@ -78,3 +83,92 @@ make update-sourcedeps
 # TODO ask on #u1-ops if there's a better way.
 sed -i 's/development-lazr.conf/local.conf/g' utilities/supervisor-dev.conf.tpl
 sed -i 's/development-appserver-lazr.conf/local.conf/g' utilities/supervisor-dev.conf.tpl
+
+# Create the music search catalogue.
+# The import script will get the full catalogue since last monday, and updates for the rest of the days.
+today=`date +%a`
+if [ "$today" = "Mon" ] 
+then
+    monday=`date +%Y%m%d`
+else
+    monday=`date -dlast-monday +%Y%m%d`
+fi
+# 496 is the id of the world shop. The other ids can be found on the cerati branch, cerati/parameters.py:MUSIC_PROVIDER_SHOP_IDS.
+# TODO should we add them? --elopio - 20130520
+monday_shop_dir=working_dir/$monday/shop-496
+mkdir -p $monday_shop_dir
+cat <<EOF >$monday_shop_dir/artist-full.csv
+artistId,name,popularity,tags,image,url
+32,Jimi Hendrix,0.63,"rock,world,spanish,pop-rock,1990s,1960s,2000s",http://cdn.7static.com/static/img/artistimages/00/000/000/0000000032_<\$size\$>.jpg,http://www.7digital.com/artist/jimi-hendrix/
+
+EOF
+gzip $monday_shop_dir/artist-full.csv
+
+cat <<EOF >$monday_shop_dir/artist-updates.csv
+action,artistId,name,popularity,tags,image,url
+
+EOF
+gzip $monday_shop_dir/artist-updates.csv
+
+cat <<EOF >$monday_shop_dir/release-full.csv
+releaseId,title,version,artistId,artistAppearsAs,barcode,type,year,explicitContent,trackCount,duration,tags,licensorId,image,dateAdded,releaseDate,labelId,labelName,formats,price,rrp,url
+1541733,Jimi Hendrix,,32,Jimi Hendrix,8718011752963,Album,2007,false,22,6906,rock,335,http://cdn.7static.com/static/img/sleeveart/00/015/417/0001541733_<\$size\$>.jpg,2012-01-06T10:58:52.093Z,2007-12-10T00:00:00Z,92464,Weton,"17,33,",9.99,9.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix
+
+EOF
+gzip $monday_shop_dir/release-full.csv
+
+cat <<EOF >$monday_shop_dir/release-updates.csv
+action,releaseId,title,version,artistId,artistAppearsAs,barcode,type,year,explicitContent,trackCount,duration,tags,licensorId,image,dateAdded,releaseDate,labelId,labelName,formats,price,rrp,url
+
+EOF
+gzip $monday_shop_dir/release-updates.csv
+
+cat <<EOF >$monday_shop_dir/track-full.csv
+trackId,title,version,type,isrc,explicitContent,trackNumber,discNumber,artistId,artistAppearsAs,releaseId,duration,formats,price,rrp,url,popularity,streamingReleaseDate
+16997880,Foxy Lady,,Audio,NLHR50913714,false,1,1,32,The Jimi Hendrix Experience,1541733,366,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=01,0.35,2007-12-10T00:00:00Z
+16997882,Sunshine Of Your Love,,Audio,NLHR50913719,false,2,1,32,The Jimi Hendrix Experience,1541733,409,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=02,0.27,2007-12-10T00:00:00Z
+16997884,Room Full Of Mirrors,,Audio,NLHR50913727,false,3,1,32,The Jimi Hendrix Experience,1541733,174,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=03,0.3,2007-12-10T00:00:00Z
+16997906,Fire,,Audio,NLHR50913721,false,7,1,32,The Jimi Hendrix Experience,1541733,234,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=07,0.32,2007-12-10T00:00:00Z
+16997913,Outside Woman Blues,,Audio,NLHR50913711,false,9,1,32,Jimi Hendrix,1541733,466,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=09,0.27,2007-12-10T00:00:00Z
+16997921,Purple Haze,,Audio,NLHR50913717,false,11,1,32,The Jimi Hendrix Experience,1541733,181,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=11,0.33,2007-12-10T00:00:00Z
+16997923,Voodoo Chile (Slight Return),,Audio,NLHR50913722,false,12,1,32,The Jimi Hendrix Experience,1541733,549,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=12,0.35,2007-12-10T00:00:00Z
+16997927,Bleeding Heart (Blues In C Sharp),,Audio,NLHR50913726,false,13,1,32,The Jimi Hendrix Experience,1541733,319,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=13,0.3,2007-12-10T00:00:00Z
+16997941,Morrison's Lament,,Audio,NLHR50913709,false,15,1,32,Jimi Hendrix,1541733,485,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=15,0.27,2007-12-10T00:00:00Z
+16997949,Little Wing,,Audio,NLHR50913731,false,17,1,32,The Jimi Hendrix Experience,1541733,194,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=17,0.32,2007-12-10T00:00:00Z
+16997953,Wild Thing,,Audio,NLHR50913710,false,18,1,32,The Jimi Hendrix Experience,1541733,215,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=18,0.27,2007-12-10T00:00:00Z
+16997958,Wake Up This Morning And Found Yourself Dead,,Audio,NLHR50913720,false,19,1,32,Jimi Hendrix,1541733,478,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=19,0.27,2007-12-10T00:00:00Z
+16997966,Tomorrow Never Knows / Uranus Rock,,Audio,NLHR50913729,false,21,1,32,Jimi Hendrix,1541733,493,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=21,0.32,2007-12-10T00:00:00Z
+16997971,Red House,,Audio,NLHR50913730,false,22,1,32,Jimi Hendrix,1541733,636,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=22,0.23,2007-12-10T00:00:00Z
+16997886,Hot Trigger (A.k.a. Not Trigger Walking With Bessie Mae),,Audio,NLHR50913716,false,4,1,1195740,Lonnie Youngblood And The So-Called Jimi Hendrix Tapes,1541733,233,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=04,0.27,2007-12-10T00:00:00Z
+16997898,Let The Good Times Roll,,Audio,NLHR50913725,false,6,1,1195740,Lonnie Youngblood And The So-Called Jimi Hendrix Tapes,1541733,365,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=06,0.27,2007-12-10T00:00:00Z
+16997912,Freedom And You,,Audio,NLHR50913715,false,8,1,1195740,Lonnie Youngblood And The So-Called Jimi Hendrix Tapes,1541733,145,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=08,0.27,2007-12-10T00:00:00Z
+16997946,Good Feeling,,Audio,NLHR50913724,false,16,1,1195740,Lonnie Youngblood And The So-Called Jimi Hendrix Tapes,1541733,255,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=16,0.27,2007-12-10T00:00:00Z
+16997892,Wipe The Sweat Part 2,,Audio,NLHR50913728,false,5,1,1195742,Jimi Hendrix feat. Lonnie Youngblood,1541733,169,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=05,0.27,2007-12-10T00:00:00Z
+16997918,Soul Food (That's What I Like),,Audio,NLHR50913713,false,10,1,1195742,Jimi Hendrix feat. Lonnie Youngblood,1541733,210,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=10,0.27,2007-12-10T00:00:00Z
+16997933,She's A Fox,,Audio,NLHR50913732,false,14,1,1195742,Jimi Hendrix feat. Lonnie Youngblood,1541733,160,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=14,0.3,2007-12-10T00:00:00Z
+16997963,Go Go Shoes,,Audio,NLHR50913718,false,20,1,1195742,Jimi Hendrix feat. Lonnie Youngblood,1541733,170,"17,33",0.99,0.99,http://xw.7digital.com/artist/jimi-hendrix/release/jimi-hendrix?h=20,0.27,2007-12-10T00:00:00Z
+
+EOF
+gzip $monday_shop_dir/track-full.csv
+
+cat <<EOF >$monday_shop_dir/track-updates.csv
+action,trackId,title,version,type,isrc,explicitContent,trackNumber,discNumber,artistId,artistAppearsAs,releaseId,duration,formats,price,rrp,url,popularity,streamingReleaseDate
+
+EOF
+gzip $monday_shop_dir/track-updates.csv
+
+# Install the music search server.
+cd ~
+# Get the branch.
+bzr branch lp:cerati {music_search.src_dir}
+# Setup the environment.
+cd {music_search.src_dir}
+cat <<EOF > configs/local-lazr.conf
+[general]
+environment_name: development
+base_url: {music_search.url}
+web_music_store_url: {u1.url}
+
+EOF
+
+SOURCEDEPS_DIR=../ubunet-sourcedeps/ make

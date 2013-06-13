@@ -99,15 +99,18 @@ magically automated.
 
 13. Set up the Music Search server:
 
-  TODO. Do we need it?
+  # This server runs on the same U1 server machine.
+  $ ssh ubuntu@u1.local ~/bin/run-music-search
 
 13. Install the Curucú server (Only needed for Smart Scopes tests):
 
-  TODO.
+  $ ./bin/setup_vm.py curucu --install
+  $ virsh start curucu
+  $ ssh ubuntu@curucu ./bin/run
 
-17. Install the desktop machine that will run the tests:
+14. Install the desktop machine that will run the tests:
 
-  $ ./bin/setup_vm.py unity-prevalidation --install
+  $ ./bin/setup_vm.py purchase-testing --install
 
 
 Set up the in-dash payments tests against the local servers
@@ -209,30 +212,6 @@ Set up the curucu server
   # On ~pedronis/curucu/canonistack-deploy, there's a README with the
   # instructios to deploy curucu on a canonistack machine with Juju.
   # TODO try to deploy it with juju on our vms.
-  # TODO we need an amazon key.
-  # On the host
-  $ ./bin/setup_vm.py precise-curucu-server --install
-  $ virsh start precise-curucu-server
-  $ ssh ubuntu@precise-curucu-server
-  # On the vm.
-  # TODO install the dependencies, what are the dependencies?
-  $ bzr branch lp:curucu
-  $ cd curucu
-  $ editor try.cfg
-
-  [amazon]
-  key = amazon key
-  secret = amazon secret
-
-  [u1ms]
-  service_url = http://musicsearch.ubuntu.com/v1/
-
-  [feedback_store]
-  interval = 4
-  # when set to empty storing feedback is disabled
-  store_directory = /tmp/feedback
-  
-  $ CURUCU_CFG=try.cfg U1CONFIG=configs/development-lazr.conf PYTHONPATH=.:lib gunicorn -w 2 -k gevent_wsgi -b 0.0.0.0:8000 curucu.wsgi:app
 
 Mounting guest disk images on the host
 ======================================

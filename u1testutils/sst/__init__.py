@@ -167,7 +167,8 @@ class Page(object):
 
     def assert_qa_anchor(self):
         """Assert the qa anchor."""
-        sst.actions.assert_element(**{'data-qa-id': self.qa_anchor})
+        sst.actions.assert_element(
+            tag='html', **{'data-qa-id': self.qa_anchor})
 
     def _log_errors(self):
         if sst.actions.exists_element(css_class='error'):

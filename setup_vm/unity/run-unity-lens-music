@@ -1,5 +1,7 @@
 #!/bin/sh -ex
 
+# Not currently used, kept for documentation purposes
+
 # TODO x86_64 sounds like trouble.
 # We can use G_MESSAGES_DEBUG=all to get debug messages on the console.
 # TODO change the name of the environment variables, it's not just staging.

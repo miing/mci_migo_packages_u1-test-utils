@@ -38,5 +38,8 @@ pay_api_password = u1qapassword
 
 [ubuntuone]
 ubuntuone_server_url = {u1.url}
+
+[musicsearch]
+musicsearch_server_url = {music_search.url}
     
 EOF

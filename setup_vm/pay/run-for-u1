@@ -1,8 +1,9 @@
-#!/bin/sh
+#!/bin/sh -ex
 
 cd {pay.src_dir}
 
 # Setup the database.
+rm -fr .env/db # So this script can run more than once when needed
 fab setup_postgresql_server
 # Add the U1 consumer.
 # We need the prefix to be TEST for the offline processor to work.
@@ -13,7 +14,6 @@ cat <<EOF >src/paymentservice/fixtures/consumer.json
         "model": "paymentservice.consumer",
         "fields": {
             "notification_url": "{u1.url}/notifications/",
-            "ip_address": "{u1.address}",
             "name": "Ubuntu One",
             "default_business_unit": "Online Services",
             "email_footer": "Test footer.",

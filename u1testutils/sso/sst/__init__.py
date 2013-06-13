@@ -99,7 +99,7 @@ def sign_in(user=None, is_site_recognized=True):
         site_not_recognized.yes_sign_me_in()
 
 
-def log_out(user_name):
+def log_out():
     """Log out from the Ubuntu Single Sign On site.
 
     The browser must be on the Single Sign On site, and the user must have the
@@ -108,9 +108,6 @@ def log_out(user_name):
     If the log out succeeds, the browser will be on the Ubuntu Single Sign On
     logout page.
 
-    Keyword arguments:
-    user_name -- The name of the logged in user.
-
     """
-    your_account = pages.YourAccount(user_name)
+    your_account = pages.YourAccount()
     return your_account.subheader.log_out()

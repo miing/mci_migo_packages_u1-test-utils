@@ -22,7 +22,7 @@ fab bootstrap:download_cache_path=~/download-cache
 # variable.
 cat <<EOF >django_project/local.cfg
 [__noschema__]
-basedir = .
+basedir = src
 db_host = /home/ubuntu/{sso.src_dir}/.env/db
 hostname = {sso.address}:{sso.port}
 

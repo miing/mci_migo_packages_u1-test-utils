@@ -1,5 +1,7 @@
 #!/bin/sh -ex
 
+# Not currently used, kept for documentation purposes
+
 # We can use U1_DEBUG=True to get debug messages on the console.
 USSOC_SERVICE_URL={sso.url}/api/1.0/ /usr/lib/ubuntu-sso-client/ubuntu-sso-login &
 # XXX ugly sleep.

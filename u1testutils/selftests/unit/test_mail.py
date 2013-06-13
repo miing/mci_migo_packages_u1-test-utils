@@ -16,6 +16,7 @@
 
 import socket
 import threading
+import time
 import unittest
 
 import localmail
@@ -33,7 +34,17 @@ class MailTestCase(unittest.TestCase):
     def setUpClass(class_):
         class_.localmail_thread = threading.Thread(
             target=localmail.run, args=(class_.SMTP_PORT, settings.IMAP_PORT))
+        # Avoid hanging the main process when something goes wrong
+        class_.localmail_thread.daemon = True
         class_.localmail_thread.start()
+        # There is a race here as there is no (easy, that I know of) way to
+        # guarantee that the server has reached the point that it is listening
+        # to the socket. This leads to conection errors in these cases.  So the
+        # workaround is to... sleep :-/ The proper way to handle this would be
+        # to add an Event() in the server that can be waited on in the client
+        # (or any other sync mechanism including making sure run() blocks until
+        # the listen calls have been really executed) -- vila 2013-05-22
+        time.sleep(0.1)
         # Try the port to make sure the server started.
         socket_ = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         socket_.settimeout(10)

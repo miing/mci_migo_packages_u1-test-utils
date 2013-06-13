@@ -1,10 +1,11 @@
-#!/bin/sh
+#!/bin/sh -ex
 
 cd ~/{sso.src_dir}
 # We need an SMTP server to send emails.
 .env/bin/twistd localmail --imap {sso.imap_port} --smtp {sso.smtp_port}
 
 # Setup the database.
+rm -fr .env/db # So this script can run more than once when needed
 fab setup_postgresql_server
 fab manage:loaddata,allow_unverified
 # Set the allow-unverified config for Pay.
@@ -23,7 +24,7 @@ fab manage:add_openid_rp_config,{u1.url},--allow-unverified,--allowed-user-attri
 # password: u1qapassword
 # Click the Save button.
 # $ fab manage:dumpdata,identityprovider.APIUser
-cat <<EOF >identityprovider/fixtures/apiuser.json
+cat <<EOF >src/identityprovider/fixtures/apiuser.json
 [
     {
         "pk": 1,

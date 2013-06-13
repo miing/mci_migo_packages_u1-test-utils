@@ -79,16 +79,36 @@ class InitPageTestCase(testtools.TestCase):
         mock_action.assert_called_with('/test/path')
         self.assertEquals(page, returned_page)
 
-    def test_assert_page_is_open(self):
+    def test_assert_page_is_open_without_qa_anchor(self):
         # All the mocked methods have acceptance tests.
         with contextlib.nested(
             mock.patch.object(Page, '_is_oops_displayed', return_value=False),
             mock.patch.object(Page, 'assert_title'),
             mock.patch.object(Page, 'assert_url_path'),
         ) as mock_checks:
-            PageWithoutCheck().assert_page_is_open()
+            with mock.patch.object(Page, 'assert_qa_anchor') as mock_anchor:
+                PageWithoutCheck().assert_page_is_open()
+
         for mock_check in mock_checks:
             mock_check.assert_called_once_with()
+        self.assertFalse(mock_anchor.called)
+
+    def test_assert_page_is_open_with_anchor(self):
+        # All the mocked methods have acceptance tests.
+        with contextlib.nested(
+            mock.patch.object(Page, '_is_oops_displayed', return_value=False),
+            mock.patch.object(Page, 'assert_qa_anchor'),
+            mock.patch.object(Page, 'assert_url_path')
+        ) as mock_checks:
+            with mock.patch.object(Page, 'assert_title') as mock_title:
+                page = PageWithoutCheck()
+                page.qa_anchor = 'test_anchor'
+
+            page.assert_page_is_open()
+
+        for mock_check in mock_checks:
+            mock_check.assert_called_once_with()
+        self.assertFalse(mock_title.called)
 
 
 class PageWithOnlyHeadingsAssertions(PageWithoutCheck):

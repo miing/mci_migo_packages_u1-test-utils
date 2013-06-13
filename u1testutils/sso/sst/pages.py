@@ -32,11 +32,20 @@ class LogIn(u1testutils.sst.Page):
 
     """
 
-    title = 'Log in'
-    url_path = '/'
-    headings1 = ['Ubuntu Single Sign On']
-    headings2 = ['Log in to Ubuntu Single Sign On', 'Are you new?']
-    qa_anchor = 'ubuntu_login_title'
+    url_path = '(/|/\+login)'
+    is_url_path_regex = True
+    qa_anchor = 'login'
+
+    @log_action(logging.info)
+    def _open_page(self):
+        """Open the page.
+
+        This overwrites the method from the base Page class in order to choose
+        one of the possible URL paths to open the page.
+
+        """
+        sst.actions.go_to('/+login')
+        return self
 
     @log_action(logging.info)
     def log_in_to_site_recognized(self, user=None):
@@ -85,7 +94,7 @@ class LogIn(u1testutils.sst.Page):
 
     def _click_continue_button(self):
         continue_button = sst.actions.get_element_by_css(
-            '*[data-qa-id="ubuntu_login_button"]')
+            '*[data-qa-id="login_button"]')
         sst.actions.click_button(continue_button)
 
     @log_action(logging.info)
@@ -95,15 +104,15 @@ class LogIn(u1testutils.sst.Page):
         return CreateAccount()
 
     def _click_create_new_account(self):
-        sst.actions.go_to('/+new_account')
+        link = sst.actions.get_element_by_css(
+            '*[data-qa-id="create_account_link"]')
+        sst.actions.click_link(link)
 
 
 class LogInFromRedirect(LogIn):
 
     url_path = '/.*/\+decide'
     is_url_path_regex = True
-    headings2 = ['Log in', 'Are you new?']
-    qa_anchor = 'ubuntu_login_title'
 
     @log_action(logging.info)
     def go_to_create_new_account(self):
@@ -143,7 +152,8 @@ class _AnonymousSubheader(object):
 
     @log_action(logging.info)
     def go_to_log_in_or_create_account(self):
-        sst.actions.click_link('login-link')
+        link = sst.actions.get_element_by_css('*[data-qa-id="login_link"]')
+        sst.actions.click_link(link)
         return LogIn()
 
 
@@ -155,9 +165,7 @@ class CreateAccount(PageWithAnonymousSubheader):
 
     """
 
-    title = 'Create account'
     url_path = '/+new_account'
-    headings1 = ['Ubuntu Single Sign On', 'Create an account']
     qa_anchor = 'new_account'
 
     @log_action(logging.info)
@@ -190,7 +198,8 @@ class CreateAccount(PageWithAnonymousSubheader):
             sst.actions.set_checkbox_value(tos_field, True)
 
     def _click_continue(self):
-        continue_button = sst.actions.get_element(name='continue')
+        continue_button = sst.actions.get_element_by_css(
+            '*[data-qa-id="register_button"]')
         sst.actions.click_button(continue_button)
 
 
@@ -208,10 +217,7 @@ class AccountCreationMailSent(PageWithAnonymousSubheader):
 
     """
 
-    title = 'Account creation mail sent'
     url_path = '/+new_account'
-    headings1 = ['Account creation mail sent']
-    headings2 = ["Haven't received it?"]
     qa_anchor = 'new_account'
 
     @log_action(logging.info)
@@ -251,8 +257,8 @@ class AccountCreationMailSent(PageWithAnonymousSubheader):
                                     confirmation_code)
 
     def _click_continue_button(self):
-        continue_button = sst.actions.get_element(css_class='btn',
-                                                  text='Continue')
+        continue_button = sst.actions.get_element_by_css(
+            '*[data-qa-id="complete_account_creation"]')
         sst.actions.click_button(continue_button)
 
 
@@ -271,11 +277,12 @@ class UserSubheader(object):
     @log_action(logging.info)
     def log_out(self):
         """Log out from the web site."""
-        sst.actions.click_link('logout-link')
+        link = sst.actions.get_element_by_css('*[data-qa-id="logout_link"]')
+        sst.actions.click_link(link)
         return YouHaveBeenLoggedOut()
 
     def get_user_name(self):
-        return sst.actions.get_element(id='account').text
+        return sst.actions.get_element_by_css('*[data-qa-id="user_name"]').text
 
 
 class CompleteEmailValidation(PageWithUserSubheader):
@@ -286,32 +293,31 @@ class CompleteEmailValidation(PageWithUserSubheader):
 
     """
 
-    title = "Complete email address validation"
     url_path = '/token/.+/\+newemail/.+@.+'
     is_url_path_regex = True
+    qa_anchor = 'confirm_email'
 
     def __init__(self, open_page=False):
         super(CompleteEmailValidation, self).__init__(open_page)
 
     def _click_continue_button(self):
-        continue_button = sst.actions.get_element(css_class='btn',
-                                                  name='continue')
+        continue_button = sst.actions.get_element_by_css(
+            '*[data-qa-id="confirm_email_validation"]')
         sst.actions.click_button(continue_button)
 
     def _click_cancel(self):
-        cancel_link = sst.actions.get_element(tag='a', text_regex='[cC]ancel')
+        cancel_link = sst.actions.get_element_by_css(
+            '*[data-qa-id="cancel_email_validation"]')
         sst.actions.click_link(cancel_link)
 
     @log_action(logging.info)
     def confirm(self):
         self._click_continue_button()
-        user_name = self.subheader.get_user_name()
-        return YourAccount(user_name)
+        return YourAccount()
 
     @log_action(logging.info)
     def cancel(self):
-        user_name = self.subheader.get_user_name()
-        return YourAccount(user_name)
+        return YourAccount()
 
 
 class SiteNotRecognized(u1testutils.sst.Page):
@@ -323,9 +329,9 @@ class SiteNotRecognized(u1testutils.sst.Page):
 
     """
 
-    title = '^Authenticate to .+'
     url_path = '/.+/\+decide'
     is_url_path_regex = True
+    qa_anchor = 'decide'
 
     def assert_title(self):
         """Assert that the page is open.
@@ -346,19 +352,19 @@ class SiteNotRecognized(u1testutils.sst.Page):
         """
         information_checkboxes = self._get_information_checkboxes()
         for checkbox in information_checkboxes:
-            sst.actions.set_checkbox_value(checkbox, True)
+            if checkbox.is_displayed():
+                sst.actions.set_checkbox_value(checkbox, True)
         return self
 
     def _get_information_checkboxes(self):
         return sst.actions.get_elements_by_css(
-            'form[name="decideform"] > .info-items > .list > li > '
-            'input[type="checkbox"]')
+            '*[data-qa-id="info-items"] input[type="checkbox"]')
 
     @log_action(logging.info)
     def yes_sign_me_in(self):
         """Accept to sign in to the site not recognized and go back to it."""
-        sign_me_in_button = sst.actions.get_element(css_class='btn',
-                                                    name='yes')
+        sign_me_in_button = sst.actions.get_element_by_css(
+            '*[data-qa-id="rp_confirm_login"]')
         sst.actions.click_button(sign_me_in_button)
 
 
@@ -375,19 +381,15 @@ class YourAccount(PageWithUserSubheader):
 
     """
 
-    title = "{0}'s details"
     url_path = '/'
     qa_anchor = 'edit_account'
 
-    def __init__(self, user_name, open_page=False):
-        self.title = self.title.format(user_name)
+    def __init__(self, open_page=False):
         super(YourAccount, self).__init__(open_page)
 
 
 class YouHaveBeenLoggedOut(PageWithAnonymousSubheader):
     """Your account page of the Ubuntu Single Sign On website."""
 
-    title = 'You have been logged out'
     url_path = '/+logout'
-    headings1 = ['Ubuntu Single Sign On', 'You have been logged out']
     qa_anchor = 'logout'

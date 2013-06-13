@@ -1,0 +1,6 @@
+#!/bin/sh
+
+cd ~/{curucu.src_dir}
+rm -fr tmp/db # So this script can run more than once when needed
+make start-db
+CURUCU_CFG=try.cfg PYTHONPATH=.:./lib:$PYTHONPATH U1CONFIG=configs/development-lazr.conf U1JSONCONFIG=tmp/config.json gunicorn -w 2 -k gevent_wsgi -b 0.0.0.0:{curucu.port} curucu.wsgi:app

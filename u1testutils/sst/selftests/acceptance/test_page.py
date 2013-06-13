@@ -27,7 +27,7 @@ import u1testutils.sst
 class StringHTMLPage(u1testutils.sst.Page):
 
     def __init__(self, page_source, title, headings1, headings2, url_path,
-                 is_url_path_regex):
+                 is_url_path_regex, qa_anchor=None):
         self.page_source = page_source
         self.title = title
         self.headings1 = headings1
@@ -39,6 +39,8 @@ class StringHTMLPage(u1testutils.sst.Page):
             page_file_name = self._make_temp_page()
             self.url_path = page_file_name
         self.is_url_path_regex = is_url_path_regex
+        if qa_anchor:
+            self.qa_anchor = qa_anchor
         try:
             super(StringHTMLPage, self).__init__(open_page=True)
         finally:
@@ -172,3 +174,41 @@ class AssertPageTestCase(
         self.assertRaises(
             AssertionError, StringHTMLPage, **self.page_kwargs)
         self.assertLogLevelContains('ERROR', 'Test error')
+
+    def test_assert_correct_qa_anchor(self):
+        # Add the qa anchor to the page source.
+        soup = bs4.BeautifulSoup(self.page_source)
+        soup.html['data-qa-id'] = 'test_anchor'
+        self.page_kwargs['page_source'] = str(soup)
+        self.page_kwargs['qa_anchor'] = 'test_anchor'
+        # The title will not be asserted.
+        self.page_kwargs['title'] = 'Wrong title'
+        # The headings1 will not be asserted.
+        self.page_kwargs['headings1'] = ['Wrong h1']
+        # The headings 2 will not be asserted.
+        self.page_kwargs['headings2'] = ['Wrong h2']
+
+        # If the instantiation doesn't fail, it means we asserted it's the
+        # correct page only checking the anchor.
+        StringHTMLPage(**self.page_kwargs)
+
+    def test_assert_wrong_qa_anchor(self):
+        # Add the qa anchor to the page source.
+        soup = bs4.BeautifulSoup(self.page_source)
+        soup.html['data-qa-id'] = 'test_anchor'
+        self.page_kwargs['page_source'] = str(soup)
+        self.page_kwargs['qa_anchor'] = 'wrong_anchor'
+
+        self.assertRaises(AssertionError, StringHTMLPage, **self.page_kwargs)
+
+    def test_assert_qa_anchor_not_in_html_tag(self):
+        # Add the qa anchor to the page source.
+        soup = bs4.BeautifulSoup(self.page_source)
+        soup.html['data-qa-id'] = 'test_html_anchor'
+        div_element = soup.new_tag('div')
+        div_element['data-qa-id'] = 'test_div_anchor'
+        soup.body.append(div_element)
+        self.page_kwargs['page_source'] = str(soup)
+        self.page_kwargs['qa_anchor'] = 'test_div_anchor'
+
+        self.assertRaises(AssertionError, StringHTMLPage, **self.page_kwargs)

@@ -1,0 +1,18 @@
+#!/bin/sh -ex
+
+cd ~/{u1.src_dir}
+make start-solr
+# Import the 7digital catalog.
+today=`date +%a`
+if [ "$today" = "Mon" ] 
+then
+    monday=`date +%Y%m%d`
+else
+    monday=`date -dlast-monday +%Y%m%d`
+fi
+# 496 is the id of the world shop. The other ids can be found on the cerati branch, cerati/parameters.py:MUSIC_PROVIDER_SHOP_IDS.
+# TODO should we add them? --elopio - 20130520
+./utilities/seven_digital/manage.py import_7d_to_solr canonical {music_search.token} --shop-ids 496 --solr-port `ps fax | grep jetty.port | tail -n 1 | sed 's/.*jetty.port=\([0-9]*\).*/\1/'` --limit 1000 --date $monday
+cd ~/{music_search.src_dir}
+echo `ps fax | grep jetty.port | tail -n 1 | sed 's/.*jetty.port=\([0-9]*\).*/\1/'` > tmp/jetty.port
+PYTHONPATH=.:lib:$PYTHONPATH U1CONFIG=configs/local-lazr.conf gunicorn cerati.views:app -b 0.0.0.0:{music_search.port}
