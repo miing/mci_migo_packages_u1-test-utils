@@ -89,8 +89,12 @@ class LogIn(u1testutils.sst.Page):
             pass
 
     def _fill_log_in_form(self, email, password):
-        sst.actions.write_textfield('id_email', email)
-        sst.actions.write_textfield('id_password', password)
+        email_field = sst.actions.get_element_by_css(
+            '*[data-qa-id="login_form"] #id_email')
+        sst.actions.write_textfield(email_field, email)
+        password_field = sst.actions.get_element_by_css(
+            '*[data-qa-id="login_form"] #id_password')
+        sst.actions.write_textfield(password_field, password)
 
     def _click_continue_button(self):
         continue_button = sst.actions.get_element_by_css(
@@ -101,12 +105,16 @@ class LogIn(u1testutils.sst.Page):
     def go_to_create_new_account(self):
         """Go to the Create new account page."""
         self._click_create_new_account()
-        return CreateAccount()
+        return self._new_create_account_page()
 
     def _click_create_new_account(self):
         link = sst.actions.get_element_by_css(
             '*[data-qa-id="create_account_link"]')
         sst.actions.click_link(link)
+
+    def _new_create_account_page(self):
+        # override in children
+        return CreateAccount()
 
 
 class LogInFromRedirect(LogIn):
@@ -184,8 +192,12 @@ class CreateAccount(PageWithAnonymousSubheader):
         if password_confirmation is None:
             password_confirmation = user.password
         sst.actions.write_textfield('id_displayname', user.full_name)
-        sst.actions.write_textfield('id_email', user.email)
-        sst.actions.write_textfield('id_password', user.password)
+        email_field = sst.actions.get_element_by_css(
+            '*[data-qa-id="create_account_form"] #id_email')
+        sst.actions.write_textfield(email_field, user.email)
+        password_field = sst.actions.get_element_by_css(
+            '*[data-qa-id="create_account_form"] #id_password')
+        sst.actions.write_textfield(password_field, user.password)
         sst.actions.write_textfield(
             'id_passwordconfirm', password_confirmation)
 
@@ -206,6 +218,28 @@ class CreateAccount(PageWithAnonymousSubheader):
 class CreateAccountFromRedirect(CreateAccount):
 
     url_path = '/.*/\+new_account'
+    is_url_path_regex = True
+
+
+class UnifiedLogInCreateAccount(LogIn, CreateAccount):
+    """Log in or create account, unified experience."""
+
+    url_path = LogIn.url_path
+    is_url_path_regex = LogIn.is_url_path_regex
+    qa_anchor = 'login'
+
+    def _click_create_new_account(self):
+        new_user_intention = sst.actions.get_element_by_css(
+            '*[data-qa-id="user_intention_create"]')
+        sst.actions.click_element(new_user_intention)
+
+    def _new_create_account_page(self):
+        return self
+
+
+class UnifiedLogInCreateAccountFromRedirect(UnifiedLogInCreateAccount):
+
+    url_path = '/.*/\+decide'
     is_url_path_regex = True
 
 

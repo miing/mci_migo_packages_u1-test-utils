@@ -13,7 +13,7 @@
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 import sst.actions
 
-from u1testutils.sso import mail
+from u1testutils.sso import environment, mail
 from u1testutils.sso.sst import pages
 
 
@@ -32,7 +32,10 @@ def create_new_account(user, is_site_recognized=True):
         information will be send to it. Default is True.
 
     """
-    log_in = pages.LogInFromRedirect()
+    if environment.get_current_brand() == 'ubuntuone':
+        log_in = pages.UnifiedLogInCreateAccountFromRedirect()
+    else:
+        log_in = pages.LogInFromRedirect()
     create_account = log_in.go_to_create_new_account()
     create_account.create_ubuntu_sso_account(user)
 
